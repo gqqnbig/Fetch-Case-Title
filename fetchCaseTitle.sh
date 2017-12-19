@@ -41,8 +41,9 @@ title=$(echo "$content" | grep -oP \(?\<=CDATA\\[\).+?\(?\=\\]\) )
 
 
 title="${title%"${title##*[![:space:]]}"}"  # remove tailing whitespace
-title=$(echo "$title" | sed 's/\(\w\)\(\w*\)/\u\1\L\2/g') # change title to CamelCase
-echo $title
+title=$(echo "$title" | sed 's/\b\w\w\b/\U\0/g' )
+
+title=$(echo "$title" | sed 's/\(\w\)\(\w\w\+\)/\u\1\L\2/g') # change title to CamelCase
 
 description=""
 description=$description
@@ -53,6 +54,10 @@ while [ ${#description} -le 15 ]; do
 	match=$( echo "$title" | grep -oP ^\\w\+ )
 	description=$description$match
 	title=$( echo "$title" | cut -c$((${#match}+2))- )
+
+	if [ -z "$title" ]; then
+		break
+	fi
 done
 
 if [ -z "$description" ]; then
@@ -62,4 +67,4 @@ fi
 
 echo short title is "$description"
 
-git branch -m "$currentBranch" "$currentBranch$description"
+git branch -m "$currentBranch" "$currentBranch-$description"
