@@ -2,11 +2,22 @@
 # when initilizing a variable, there cannot have spaces between = .
 token=$(cat /tmp/fbToken)
 if [ $? -ne 0 ]; then
-  echo Generating new API token...
-  content=$(curl -s https://lpqopm.loanspq.com/api.asp?cmd=logon\&email=???\&password=???)
-  echo "$content" | grep -oP \(?\<=CDATA\\[\).+?\(?\=\\]\) > /tmp/fbToken
+	echo -e "Generating new API token...\nPlease input your credential. Your credential won't be stored."
+	email=$(git config --get user.email )
+	echo 'Fogbugz email address: '$email 
+	read -sp 'Password:' password
+	echo
+	content=$(curl -s https://lpqopm.loanspq.com/api.asp?cmd=logon\&email=$email\&password=$password)
 
-  token=$(cat /tmp/fbToken)
+
+	message=$( echo "$content" | grep -oP \(?\<=CDATA\\[\).+?\(?\=\\]\) ) 
+	if echo "$content" | grep -qP '<error' ; then
+		echo Error in logging in: "$message"
+		exit 1
+	fi
+	
+	echo "$message" > /tmp/fbToken
+	token=$(cat /tmp/fbToken)
 fi
 
 echo Your API token is "$token"
